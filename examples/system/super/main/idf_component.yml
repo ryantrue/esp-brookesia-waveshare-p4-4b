@@ -47,6 +47,10 @@ dependencies:
   espressif/brookesia_gui_lvgl:
     version: "0.8.*"
     override_path: ../../../../gui/brookesia_gui_lvgl
+  # LVGL 9.6.0 currently uses removed FreeType internal include aliases in
+  # lv_ftsystem.c. Keep the last compatible 9.x release until upstream fixes it.
+  lvgl/lvgl:
+    version: "==9.5.0"
 
   # Runtime
   espressif/brookesia_runtime_js:
