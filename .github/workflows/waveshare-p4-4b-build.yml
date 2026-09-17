@@ -1,0 +1,68 @@
+name: Waveshare P4-4B Build
+
+on:
+  pull_request:
+    branches:
+      - waveshare-p4-4b
+    paths:
+      - "hal/brookesia_hal_boards/**"
+      - "hal/brookesia_hal_adaptor/**"
+      - "examples/system/super/**"
+      - ".github/workflows/waveshare-p4-4b-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-system-super:
+    name: ESP-IDF 6.1 / System Super / rev1.x
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v6.1
+      options: --user root
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Waveshare board
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          idf.py --version
+          cd examples/system/super
+          rm -rf build sdkconfig managed_components dependencies.lock components/gen_bmgr_codes
+          idf.py gen-bmgr-config -b esp32_p4_wifi6_touch_lcd_4b
+          grep -E 'CONFIG_IDF_TARGET=|CONFIG_ESPTOOLPY_FLASHSIZE_32MB=|CONFIG_ESP32P4_SELECTS_REV_LESS_V3=|CONFIG_ESP32P4_REV_MIN_100=|CONFIG_SPIRAM_SPEED_200M=' sdkconfig || true
+
+      - name: Build System Super
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd examples/system/super
+          idf.py -B build -D BROOKESIA_CXX_JOBS=3 build
+
+      - name: Collect flash package
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd examples/system/super
+          mkdir -p build/firmware-package
+          cp build/*.bin build/firmware-package/ 2>/dev/null || true
+          cp build/bootloader/bootloader.bin build/firmware-package/ 2>/dev/null || true
+          cp build/partition_table/partition-table.bin build/firmware-package/ 2>/dev/null || true
+          cp build/flash_args build/firmware-package/ 2>/dev/null || true
+          cp build/flasher_args.json build/firmware-package/ 2>/dev/null || true
+          cp build/project_description.json build/firmware-package/ 2>/dev/null || true
+          ls -lh build/firmware-package
+
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-system-super-idf61
+          path: examples/system/super/build/firmware-package/
+          if-no-files-found: error
+          retention-days: 14

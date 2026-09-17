@@ -1,0 +1,98 @@
+# Peripherals for Waveshare ESP32-P4-WIFI6-Touch-LCD-4B
+peripherals:
+  - name: i2c_master
+    type: i2c
+    role: master
+    config:
+      port: 0
+      pins:
+        sda: 7
+        scl: 8
+
+  # ES8311 speaker path. The ES7210 recorder shares the same physical clocks.
+  - name: i2s_audio_out
+    type: i2s
+    format: "std-out"
+    role: master
+    config:
+      port: 0
+      sample_rate_hz: 48000
+      clk_src: "I2S_CLK_SRC_DEFAULT"
+      mclk_multiple: 256
+      bclk_div: 8
+      data_bit_width: 16
+      slot_bit_width: "I2S_SLOT_BIT_WIDTH_16BIT"
+      slot_mode: "I2S_SLOT_MODE_STEREO"
+      slot_mask: "I2S_STD_SLOT_BOTH"
+      ws_width: 16
+      pins:
+        mclk: 13
+        bclk: 12
+        ws: 10
+        dout: 9
+        din: 11
+
+  # ES7210 microphone path. Hardware-verified stream is four TDM slots:
+  # slot0=MIC1/FL, slot1=MIC3/RE, slot2=MIC2/FR, slot3=MIC4/NC.
+  - name: i2s_audio_in
+    type: i2s
+    format: "tdm-in"
+    role: master
+    config:
+      port: 0
+      sample_rate_hz: 48000
+      clk_src: "I2S_CLK_SRC_DEFAULT"
+      mclk_multiple: 256
+      bclk_div: 8
+      data_bit_width: 16
+      slot_bit_width: "I2S_SLOT_BIT_WIDTH_16BIT"
+      slot_mode: "I2S_SLOT_MODE_STEREO"
+      slot_mask: "I2S_TDM_SLOT0 | I2S_TDM_SLOT1 | I2S_TDM_SLOT2 | I2S_TDM_SLOT3"
+      ws_width: 16
+      total_slot: 4
+      pins:
+        mclk: 13
+        bclk: 12
+        ws: 10
+        dout: 9
+        din: 11
+
+  - name: gpio_pa_control
+    type: gpio
+    role: io
+    config:
+      pin: 53
+      mode: GPIO_MODE_OUTPUT
+      pull_up: true
+      default_level: 0
+
+  # VO3 powers the MIPI D-PHY rail.
+  - name: ldo_mipi
+    type: ldo
+    config:
+      chan_id: 3
+      voltage_mv: 2500
+      adjustable: 1
+      owned_by_hw: 0
+
+  - name: dsi_display
+    type: dsi
+    config:
+      bus_id: 0
+      data_lanes: 2
+      phy_clk_src: 0
+      lane_bit_rate_mbps: 480
+
+  # The board backlight is active-low, matching the maintained Waveshare BSP.
+  - name: ledc_backlight
+    type: ledc
+    version: default
+    config:
+      gpio_num: 26
+      speed_mode: LEDC_LOW_SPEED_MODE
+      channel: 1
+      timer_sel: 1
+      freq_hz: 5000
+      duty_resolution: LEDC_TIMER_10_BIT
+      duty: 0
+      output_invert: true
