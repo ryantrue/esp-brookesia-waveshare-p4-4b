@@ -35,7 +35,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           idf.py --version
           cd examples/system/super
-          rm -rf build sdkconfig managed_components dependencies.lock components/gen_bmgr_codes
+          rm -rf build sdkconfig managed_components dependencies.lock components/gen_bmgr_codes build.log
           idf.py gen-bmgr-config -b esp32_p4_wifi6_touch_lcd_4b
           grep -E 'CONFIG_IDF_TARGET=|CONFIG_ESPTOOLPY_FLASHSIZE_32MB=|CONFIG_ESP32P4_SELECTS_REV_LESS_V3=|CONFIG_ESP32P4_REV_MIN_100=|CONFIG_SPIRAM_SPEED_200M=' sdkconfig || true
 
@@ -45,9 +45,32 @@ jobs:
           set -euo pipefail
           source "$IDF_PATH/export.sh"
           cd examples/system/super
-          idf.py -B build -D BROOKESIA_CXX_JOBS=3 build
+          idf.py -B build -D BROOKESIA_CXX_JOBS=3 build 2>&1 | tee build.log
+
+      - name: Print build diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          cd examples/system/super
+          echo "===== FIRST ACTIONABLE BUILD ERRORS ====="
+          grep -nEi 'error:|fatal error:|FAILED:|CMake Error|undefined reference|No such file|not found|version solving failed|requirements are unsatisfiable' build.log | tail -160 || true
+          echo "===== END OF BUILD LOG ====="
+          tail -160 build.log || true
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-build-diagnostics
+          path: |
+            examples/system/super/build.log
+            examples/system/super/sdkconfig
+            examples/system/super/dependencies.lock
+          if-no-files-found: warn
+          retention-days: 14
 
       - name: Collect flash package
+        if: success()
         shell: bash
         run: |
           set -euo pipefail
@@ -62,6 +85,7 @@ jobs:
           ls -lh build/firmware-package
 
       - name: Upload firmware artifacts
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: waveshare-p4-4b-system-super-idf61
