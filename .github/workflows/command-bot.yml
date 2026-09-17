@@ -1,0 +1,49 @@
+name: Maintainer Bot
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  actions: write
+  contents: read
+  issues: write
+  pull-requests: write
+
+jobs:
+  command:
+    if: github.event.comment.user.login == 'ryantrue'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Handle command
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BODY: ${{ github.event.comment.body }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          case "$BODY" in
+            "/sync-upstream")
+              gh workflow run upstream-sync.yml --repo "$REPO" --ref waveshare-p4-4b
+              gh api \
+                --method POST \
+                -H "Accept: application/vnd.github+json" \
+                "repos/$REPO/issues/comments/$COMMENT_ID/reactions" \
+                -f content='rocket' >/dev/null
+              gh issue comment "$ISSUE_NUMBER" --repo "$REPO" \
+                --body "Upstream synchronization started. If upstream changed, the bot will update \`master\` and open a PR into \`waveshare-p4-4b\`."
+              ;;
+
+            "/bot help"|"/help")
+              gh issue comment "$ISSUE_NUMBER" --repo "$REPO" \
+                --body $'Available maintainer commands:\n\n- `/sync-upstream` — sync fork `master` from Espressif and open an upstream merge PR when needed.\n- `/bot help` — show this help.\n\nBuild and release commands will be added with the Waveshare board CI.'
+              ;;
+
+            *)
+              echo "No maintainer command matched; ignoring comment."
+              ;;
+          esac
