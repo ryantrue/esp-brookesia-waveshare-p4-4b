@@ -31,6 +31,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          source "$IDF_PATH/export.sh"
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           idf.py --version
           cd examples/system/super
@@ -42,6 +43,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          source "$IDF_PATH/export.sh"
           cd examples/system/super
           idf.py -B build -D BROOKESIA_CXX_JOBS=3 build
 
