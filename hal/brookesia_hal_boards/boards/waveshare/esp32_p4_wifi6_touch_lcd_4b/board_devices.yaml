@@ -7,15 +7,15 @@ devices:
     config:
       adc_enabled: false
       dac_enabled: true
-      sys_cfg:
-        is_master: false
-        no_mclk: false
+      dac_max_channel: 1
+      dac_channel_mask: "1"
+      mclk_enabled: true
     peripherals:
-      - pa_name: gpio_pa_control
+      - name: gpio_pa_control
         gain: 6
         active_level: 1
-      - i2s_name: i2s_audio_out
-      - i2c_name: i2c_master
+      - name: i2s_audio_out
+      - name: i2c_master
         address: 0x30
         frequency: 400000
 
@@ -26,15 +26,14 @@ devices:
     config:
       adc_enabled: true
       dac_enabled: false
-      sys_cfg:
-        is_master: false
-        no_mclk: false
-      adc_cfg:
-        digital_mic: false
-        label: [FL, RE, FR, NA]
+      adc_max_channel: 4
+      adc_channel_mask: "0111"
+      adc_channel_labels: [NA, RE, FR, FL]
+      adc_init_gain: 0
+      mclk_enabled: true
     peripherals:
-      - i2s_name: i2s_audio_in
-      - i2c_name: i2c_master
+      - name: i2s_audio_in
+      - name: i2c_master
         address: 0x80
         frequency: 400000
 
@@ -43,11 +42,6 @@ devices:
     sub_type: sdmmc
     version: default
     config:
-      mount_point: "/sdcard"
-      vfs_config:
-        format_if_mount_failed: false
-        max_files: 8
-        allocation_unit_size: 65536
       sub_config:
         slot: SDMMC_HOST_SLOT_0
         frequency: SDMMC_FREQ_HIGHSPEED
@@ -63,8 +57,6 @@ devices:
           d5: 0
           d6: 0
           d7: 0
-          cd: -1
-          wp: -1
         ldo_chan_id: 4
 
   - name: display_lcd
@@ -75,13 +67,10 @@ devices:
     dependencies:
       waveshare/esp_lcd_st7703: "^2.0.0"
     config:
-      invert_color: false
-      need_reset: true
       reset_gpio_num: 27
       rgb_ele_order: LCD_RGB_ELEMENT_ORDER_RGB
       data_endian: LCD_RGB_DATA_ENDIAN_BIG
       bits_per_pixel: 16
-      frame_format: RGB565_BE
       reset_active_high: 0
       dbi_config:
         virtual_channel: 0
@@ -108,8 +97,8 @@ devices:
           vsync_pulse_width: 4
           vsync_front_porch: 20
     peripherals:
-      - ldo_name: ldo_mipi
-      - dsi_name: dsi_display
+      - name: ldo_mipi
+      - name: dsi_display
 
   - name: lcd_touch
     chip: gt911
@@ -117,35 +106,26 @@ devices:
     sub_type: i2c
     version: default
     dependencies:
+      esp_lcd_touch:
+        version: "*"
+        require: public
       espressif/esp_lcd_touch_gt911: "*"
     config:
       io_i2c_config:
-        control_phase_bytes: 1
         lcd_cmd_bits: 16
-        lcd_param_bits: 0
-        scl_speed_hz: 400000
-        flags:
-          disable_control_phase: true
       touch_config:
         x_max: 720
         y_max: 720
-        rst_gpio_num: -1
-        int_gpio_num: -1
-        levels:
-          reset: 0
-          interrupt: 0
         flags:
           swap_xy: false
           mirror_x: false
           mirror_y: false
     peripherals:
-      - i2c_name: i2c_master
+      - name: i2c_master
         i2c_addr: [0xBA, 0x28]
 
   - name: lcd_brightness
     type: ledc_ctrl
     version: default
-    config:
-      default_percent: 100
     peripherals:
-      - ledc_name: ledc_backlight
+      - name: ledc_backlight
