@@ -1,0 +1,88 @@
+name: Upstream Sync
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 3 * * *"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: upstream-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository == 'ryantrue/esp-brookesia-waveshare-p4-4b'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout product branch
+        uses: actions/checkout@v4
+        with:
+          ref: waveshare-p4-4b
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch upstream and fork branches
+        run: |
+          git remote add upstream https://github.com/espressif/esp-brookesia.git
+          git fetch upstream master
+          git fetch origin master waveshare-p4-4b
+
+      - name: Fast-forward fork master from upstream
+        id: sync
+        run: |
+          set -euo pipefail
+
+          fork_sha="$(git rev-parse origin/master)"
+          upstream_sha="$(git rev-parse upstream/master)"
+
+          echo "fork_sha=$fork_sha"
+          echo "upstream_sha=$upstream_sha"
+
+          if [ "$fork_sha" = "$upstream_sha" ]; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if ! git merge-base --is-ancestor "$fork_sha" "$upstream_sha"; then
+            echo "Fork master has diverged from upstream/master. Refusing to rewrite history."
+            exit 1
+          fi
+
+          git push origin "$upstream_sha:refs/heads/master"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Open upstream merge PR
+        if: steps.sync.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          existing="$(gh pr list \
+            --repo "$GITHUB_REPOSITORY" \
+            --base waveshare-p4-4b \
+            --head master \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')"
+
+          if [ -n "$existing" ]; then
+            echo "Upstream sync PR already exists: #$existing"
+            exit 0
+          fi
+
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base waveshare-p4-4b \
+            --head master \
+            --title "chore: sync upstream ESP-Brookesia" \
+            --body "Automated upstream synchronization from \`espressif/esp-brookesia:master\`.\n\nReview board-specific conflicts and CI results before merging into \`waveshare-p4-4b\`."
