@@ -49,10 +49,9 @@ jobs:
           set -euo pipefail
           source "$IDF_PATH/export.sh"
           cd examples/system/super
-          SDKCONFIG_DEFAULTS_ORDER="$PWD/sdkconfig.defaults;$PWD/components/gen_bmgr_codes/board_manager.defaults"
-          idf.py -B build \
+          BOARD_DEFAULTS="$GITHUB_WORKSPACE/hal/brookesia_hal_boards/boards/waveshare/esp32_p4_wifi6_touch_lcd_4b/sdkconfig.defaults.board"
+          SDKCONFIG_DEFAULTS="$BOARD_DEFAULTS" idf.py -B build \
             -D BROOKESIA_CXX_JOBS=3 \
-            -D "SDKCONFIG_DEFAULTS=$SDKCONFIG_DEFAULTS_ORDER" \
             build 2>&1 | tee build.log
 
       - name: Verify Waveshare configuration
