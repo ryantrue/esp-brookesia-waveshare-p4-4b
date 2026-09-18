@@ -37,7 +37,396 @@ jobs:
           cd examples/system/super
           rm -rf build sdkconfig managed_components dependencies.lock components/gen_bmgr_codes build.log
           idf.py gen-bmgr-config -b esp32_p4_wifi6_touch_lcd_4b
-          grep -E 'CONFIG_IDF_TARGET=|CONFIG_ESPTOOLPY_FLASHSIZE_32MB=|CONFIG_ESP32P4_SELECTS_REV_LESS_V3=|CONFIG_ESP32P4_REV_MIN_100=|CONFIG_SPIRAM_SPEED_200M=' sdkconfig || true
+
+          # Fail fast if an upstream change silently drops a board capability.
+          grep -q '^CONFIG_IDF_TARGET="esp32p4"
+      - name: Build System Super
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$IDF_PATH/export.sh"
+          cd examples/system/super
+          idf.py -B build -D BROOKESIA_CXX_JOBS=3 build 2>&1 | tee build.log
+
+      - name: Print build diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          cd examples/system/super
+          echo "===== FIRST ACTIONABLE BUILD ERRORS ====="
+          grep -nEi 'error:|fatal error:|FAILED:|CMake Error|undefined reference|No such file|not found|version solving failed|requirements are unsatisfiable' build.log | tail -160 || true
+          echo "===== END OF BUILD LOG ====="
+          tail -160 build.log || true
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-build-diagnostics
+          path: |
+            examples/system/super/build.log
+            examples/system/super/sdkconfig
+            examples/system/super/dependencies.lock
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Collect flash package
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd examples/system/super
+          mkdir -p build/firmware-package
+          cp build/*.bin build/firmware-package/ 2>/dev/null || true
+          cp build/bootloader/bootloader.bin build/firmware-package/ 2>/dev/null || true
+          cp build/partition_table/partition-table.bin build/firmware-package/ 2>/dev/null || true
+          cp build/flash_args build/firmware-package/ 2>/dev/null || true
+          cp build/flasher_args.json build/firmware-package/ 2>/dev/null || true
+          cp build/project_description.json build/firmware-package/ 2>/dev/null || true
+          ls -lh build/firmware-package
+
+      - name: Upload firmware artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-system-super-idf61
+          path: examples/system/super/build/firmware-package/
+          if-no-files-found: error
+          retention-days: 14
+ sdkconfig
+          grep -q '^CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
+      - name: Build System Super
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$IDF_PATH/export.sh"
+          cd examples/system/super
+          idf.py -B build -D BROOKESIA_CXX_JOBS=3 build 2>&1 | tee build.log
+
+      - name: Print build diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          cd examples/system/super
+          echo "===== FIRST ACTIONABLE BUILD ERRORS ====="
+          grep -nEi 'error:|fatal error:|FAILED:|CMake Error|undefined reference|No such file|not found|version solving failed|requirements are unsatisfiable' build.log | tail -160 || true
+          echo "===== END OF BUILD LOG ====="
+          tail -160 build.log || true
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-build-diagnostics
+          path: |
+            examples/system/super/build.log
+            examples/system/super/sdkconfig
+            examples/system/super/dependencies.lock
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Collect flash package
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd examples/system/super
+          mkdir -p build/firmware-package
+          cp build/*.bin build/firmware-package/ 2>/dev/null || true
+          cp build/bootloader/bootloader.bin build/firmware-package/ 2>/dev/null || true
+          cp build/partition_table/partition-table.bin build/firmware-package/ 2>/dev/null || true
+          cp build/flash_args build/firmware-package/ 2>/dev/null || true
+          cp build/flasher_args.json build/firmware-package/ 2>/dev/null || true
+          cp build/project_description.json build/firmware-package/ 2>/dev/null || true
+          ls -lh build/firmware-package
+
+      - name: Upload firmware artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-system-super-idf61
+          path: examples/system/super/build/firmware-package/
+          if-no-files-found: error
+          retention-days: 14
+ sdkconfig
+          grep -q '^CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y
+      - name: Build System Super
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$IDF_PATH/export.sh"
+          cd examples/system/super
+          idf.py -B build -D BROOKESIA_CXX_JOBS=3 build 2>&1 | tee build.log
+
+      - name: Print build diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          cd examples/system/super
+          echo "===== FIRST ACTIONABLE BUILD ERRORS ====="
+          grep -nEi 'error:|fatal error:|FAILED:|CMake Error|undefined reference|No such file|not found|version solving failed|requirements are unsatisfiable' build.log | tail -160 || true
+          echo "===== END OF BUILD LOG ====="
+          tail -160 build.log || true
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-build-diagnostics
+          path: |
+            examples/system/super/build.log
+            examples/system/super/sdkconfig
+            examples/system/super/dependencies.lock
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Collect flash package
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd examples/system/super
+          mkdir -p build/firmware-package
+          cp build/*.bin build/firmware-package/ 2>/dev/null || true
+          cp build/bootloader/bootloader.bin build/firmware-package/ 2>/dev/null || true
+          cp build/partition_table/partition-table.bin build/firmware-package/ 2>/dev/null || true
+          cp build/flash_args build/firmware-package/ 2>/dev/null || true
+          cp build/flasher_args.json build/firmware-package/ 2>/dev/null || true
+          cp build/project_description.json build/firmware-package/ 2>/dev/null || true
+          ls -lh build/firmware-package
+
+      - name: Upload firmware artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-system-super-idf61
+          path: examples/system/super/build/firmware-package/
+          if-no-files-found: error
+          retention-days: 14
+ sdkconfig
+          grep -q '^CONFIG_ESP32P4_REV_MIN_100=y
+      - name: Build System Super
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$IDF_PATH/export.sh"
+          cd examples/system/super
+          idf.py -B build -D BROOKESIA_CXX_JOBS=3 build 2>&1 | tee build.log
+
+      - name: Print build diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          cd examples/system/super
+          echo "===== FIRST ACTIONABLE BUILD ERRORS ====="
+          grep -nEi 'error:|fatal error:|FAILED:|CMake Error|undefined reference|No such file|not found|version solving failed|requirements are unsatisfiable' build.log | tail -160 || true
+          echo "===== END OF BUILD LOG ====="
+          tail -160 build.log || true
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-build-diagnostics
+          path: |
+            examples/system/super/build.log
+            examples/system/super/sdkconfig
+            examples/system/super/dependencies.lock
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Collect flash package
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd examples/system/super
+          mkdir -p build/firmware-package
+          cp build/*.bin build/firmware-package/ 2>/dev/null || true
+          cp build/bootloader/bootloader.bin build/firmware-package/ 2>/dev/null || true
+          cp build/partition_table/partition-table.bin build/firmware-package/ 2>/dev/null || true
+          cp build/flash_args build/firmware-package/ 2>/dev/null || true
+          cp build/flasher_args.json build/firmware-package/ 2>/dev/null || true
+          cp build/project_description.json build/firmware-package/ 2>/dev/null || true
+          ls -lh build/firmware-package
+
+      - name: Upload firmware artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-system-super-idf61
+          path: examples/system/super/build/firmware-package/
+          if-no-files-found: error
+          retention-days: 14
+ sdkconfig
+          grep -q '^CONFIG_SPIRAM_SPEED_200M=y
+      - name: Build System Super
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$IDF_PATH/export.sh"
+          cd examples/system/super
+          idf.py -B build -D BROOKESIA_CXX_JOBS=3 build 2>&1 | tee build.log
+
+      - name: Print build diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          cd examples/system/super
+          echo "===== FIRST ACTIONABLE BUILD ERRORS ====="
+          grep -nEi 'error:|fatal error:|FAILED:|CMake Error|undefined reference|No such file|not found|version solving failed|requirements are unsatisfiable' build.log | tail -160 || true
+          echo "===== END OF BUILD LOG ====="
+          tail -160 build.log || true
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-build-diagnostics
+          path: |
+            examples/system/super/build.log
+            examples/system/super/sdkconfig
+            examples/system/super/dependencies.lock
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Collect flash package
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd examples/system/super
+          mkdir -p build/firmware-package
+          cp build/*.bin build/firmware-package/ 2>/dev/null || true
+          cp build/bootloader/bootloader.bin build/firmware-package/ 2>/dev/null || true
+          cp build/partition_table/partition-table.bin build/firmware-package/ 2>/dev/null || true
+          cp build/flash_args build/firmware-package/ 2>/dev/null || true
+          cp build/flasher_args.json build/firmware-package/ 2>/dev/null || true
+          cp build/project_description.json build/firmware-package/ 2>/dev/null || true
+          ls -lh build/firmware-package
+
+      - name: Upload firmware artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-system-super-idf61
+          path: examples/system/super/build/firmware-package/
+          if-no-files-found: error
+          retention-days: 14
+ sdkconfig
+          grep -q '^CONFIG_BROOKESIA_HAL_ADAPTOR_AUDIO_ENABLE_PROCESSOR_IMPL=y
+      - name: Build System Super
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$IDF_PATH/export.sh"
+          cd examples/system/super
+          idf.py -B build -D BROOKESIA_CXX_JOBS=3 build 2>&1 | tee build.log
+
+      - name: Print build diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          cd examples/system/super
+          echo "===== FIRST ACTIONABLE BUILD ERRORS ====="
+          grep -nEi 'error:|fatal error:|FAILED:|CMake Error|undefined reference|No such file|not found|version solving failed|requirements are unsatisfiable' build.log | tail -160 || true
+          echo "===== END OF BUILD LOG ====="
+          tail -160 build.log || true
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-build-diagnostics
+          path: |
+            examples/system/super/build.log
+            examples/system/super/sdkconfig
+            examples/system/super/dependencies.lock
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Collect flash package
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd examples/system/super
+          mkdir -p build/firmware-package
+          cp build/*.bin build/firmware-package/ 2>/dev/null || true
+          cp build/bootloader/bootloader.bin build/firmware-package/ 2>/dev/null || true
+          cp build/partition_table/partition-table.bin build/firmware-package/ 2>/dev/null || true
+          cp build/flash_args build/firmware-package/ 2>/dev/null || true
+          cp build/flasher_args.json build/firmware-package/ 2>/dev/null || true
+          cp build/project_description.json build/firmware-package/ 2>/dev/null || true
+          ls -lh build/firmware-package
+
+      - name: Upload firmware artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-system-super-idf61
+          path: examples/system/super/build/firmware-package/
+          if-no-files-found: error
+          retention-days: 14
+ sdkconfig
+          grep -q '^# CONFIG_LV_CONF_MINIMAL is not set
+      - name: Build System Super
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$IDF_PATH/export.sh"
+          cd examples/system/super
+          idf.py -B build -D BROOKESIA_CXX_JOBS=3 build 2>&1 | tee build.log
+
+      - name: Print build diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          cd examples/system/super
+          echo "===== FIRST ACTIONABLE BUILD ERRORS ====="
+          grep -nEi 'error:|fatal error:|FAILED:|CMake Error|undefined reference|No such file|not found|version solving failed|requirements are unsatisfiable' build.log | tail -160 || true
+          echo "===== END OF BUILD LOG ====="
+          tail -160 build.log || true
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-build-diagnostics
+          path: |
+            examples/system/super/build.log
+            examples/system/super/sdkconfig
+            examples/system/super/dependencies.lock
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Collect flash package
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd examples/system/super
+          mkdir -p build/firmware-package
+          cp build/*.bin build/firmware-package/ 2>/dev/null || true
+          cp build/bootloader/bootloader.bin build/firmware-package/ 2>/dev/null || true
+          cp build/partition_table/partition-table.bin build/firmware-package/ 2>/dev/null || true
+          cp build/flash_args build/firmware-package/ 2>/dev/null || true
+          cp build/flasher_args.json build/firmware-package/ 2>/dev/null || true
+          cp build/project_description.json build/firmware-package/ 2>/dev/null || true
+          ls -lh build/firmware-package
+
+      - name: Upload firmware artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-system-super-idf61
+          path: examples/system/super/build/firmware-package/
+          if-no-files-found: error
+          retention-days: 14
+ sdkconfig
+
+          echo "===== WAVESHARE BOARD CONFIG ====="
+          grep -E 'CONFIG_IDF_TARGET=|CONFIG_ESPTOOLPY_FLASHSIZE_32MB=|CONFIG_ESP32P4_SELECTS_REV_LESS_V3=|CONFIG_ESP32P4_REV_MIN_100=|CONFIG_SPIRAM_SPEED_200M=|CONFIG_BROOKESIA_HAL_ADAPTOR_AUDIO_ENABLE_PROCESSOR_IMPL=|CONFIG_LV_CONF_MINIMAL' sdkconfig
 
       - name: Build System Super
         shell: bash
