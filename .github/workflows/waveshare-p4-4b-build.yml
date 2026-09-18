@@ -35,6 +35,8 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           idf.py --version
           cd examples/system/super
+          python -m pip install --disable-pip-version-check --upgrade -r requirements.waveshare-p4-4b.txt
+          python -c 'from importlib.metadata import version; print("idf-component-manager", version("idf-component-manager"))'
           rm -rf build sdkconfig managed_components dependencies.lock components/gen_bmgr_codes build.log
           idf.py gen-bmgr-config -b esp32_p4_wifi6_touch_lcd_4b
 
