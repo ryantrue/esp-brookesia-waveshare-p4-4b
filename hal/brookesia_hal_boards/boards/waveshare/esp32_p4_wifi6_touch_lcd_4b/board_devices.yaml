@@ -23,6 +23,11 @@ devices:
     chip: es7210
     type: audio_codec
     version: default
+    dependencies:
+      # ESP-SR 2.4.x rejects ESP32-P4 rev<3 with ESP-IDF 6.1 at CMake time.
+      # 2.5.0 added IDF 6.1 compatibility; keep this as a board-local lower
+      # bound so compatible 2.x fixes can be picked up without patching Brookesia.
+      espressif/esp-sr: ">=2.5.0,<3.0.0"
     config:
       adc_enabled: true
       dac_enabled: false
