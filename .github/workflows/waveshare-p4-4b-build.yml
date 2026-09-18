@@ -38,17 +38,8 @@ jobs:
           rm -rf build sdkconfig managed_components dependencies.lock components/gen_bmgr_codes build.log
           idf.py gen-bmgr-config -b esp32_p4_wifi6_touch_lcd_4b
 
-          # Fail fast if an upstream change silently drops a board capability.
-          grep -q '^CONFIG_IDF_TARGET="esp32p4"$' sdkconfig
-          grep -q '^CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y$' sdkconfig
-          grep -q '^CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y$' sdkconfig
-          grep -q '^CONFIG_ESP32P4_REV_MIN_100=y$' sdkconfig
-          grep -q '^CONFIG_SPIRAM_SPEED_200M=y$' sdkconfig
-          grep -q '^CONFIG_BROOKESIA_HAL_ADAPTOR_AUDIO_ENABLE_PROCESSOR_IMPL=y$' sdkconfig
-          grep -q '^# CONFIG_LV_CONF_MINIMAL is not set$' sdkconfig
-
-          echo "===== WAVESHARE BOARD CONFIG ====="
-          grep -E 'CONFIG_IDF_TARGET=|CONFIG_ESPTOOLPY_FLASHSIZE_32MB=|CONFIG_ESP32P4_SELECTS_REV_LESS_V3=|CONFIG_ESP32P4_REV_MIN_100=|CONFIG_SPIRAM_SPEED_200M=|CONFIG_BROOKESIA_HAL_ADAPTOR_AUDIO_ENABLE_PROCESSOR_IMPL=|CONFIG_LV_CONF_MINIMAL' sdkconfig
+          echo "===== GENERATED BOARD DEFAULTS ====="
+          grep -E 'CONFIG_ESPTOOLPY_FLASHSIZE_32MB=|CONFIG_ESP32P4_SELECTS_REV_LESS_V3=|CONFIG_ESP32P4_REV_MIN_100=|CONFIG_SPIRAM_SPEED_200M=|CONFIG_BROOKESIA_HAL_ADAPTOR_AUDIO_ENABLE_PROCESSOR_IMPL=|CONFIG_LV_CONF_MINIMAL' components/gen_bmgr_codes/board_manager.defaults
 
       - name: Build System Super
         shell: bash
@@ -57,6 +48,26 @@ jobs:
           source "$IDF_PATH/export.sh"
           cd examples/system/super
           idf.py -B build -D BROOKESIA_CXX_JOBS=3 build 2>&1 | tee build.log
+
+      - name: Verify Waveshare configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd examples/system/super
+
+          # Guard against upstream changes silently dropping board capabilities.
+          grep -q '^CONFIG_IDF_TARGET="esp32p4"$' sdkconfig
+          grep -q '^CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y$' sdkconfig
+          grep -q '^CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y$' sdkconfig
+          grep -q '^CONFIG_ESP32P4_REV_MIN_100=y$' sdkconfig
+          grep -q '^CONFIG_SPIRAM_SPEED_200M=y$' sdkconfig
+          grep -q '^CONFIG_BROOKESIA_HAL_ADAPTOR_AUDIO_ENABLE_PROCESSOR_IMPL=y$' sdkconfig
+          grep -q '^# CONFIG_LV_CONF_MINIMAL is not set$' sdkconfig
+
+          echo "===== RESOLVED WAVESHARE BOARD CONFIG ====="
+          grep -E 'CONFIG_IDF_TARGET=|CONFIG_ESPTOOLPY_FLASHSIZE_32MB=|CONFIG_ESP32P4_SELECTS_REV_LESS_V3=|CONFIG_ESP32P4_REV_MIN_100=|CONFIG_SPIRAM_SPEED_200M=|CONFIG_BROOKESIA_HAL_ADAPTOR_AUDIO_ENABLE_PROCESSOR_IMPL=|CONFIG_LV_CONF_MINIMAL' sdkconfig
+          echo "===== RESOLVED AUDIO DEPENDENCIES ====="
+          grep -A4 -B2 -E 'espressif/esp-sr|jason-mao/av_processor|espressif/gmf_ai_audio' dependencies.lock || true
 
       - name: Print build diagnostics
         if: failure()
