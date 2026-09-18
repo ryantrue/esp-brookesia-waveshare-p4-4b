@@ -68,6 +68,7 @@ jobs:
           grep -E 'CONFIG_IDF_TARGET=|CONFIG_ESPTOOLPY_FLASHSIZE_32MB=|CONFIG_ESP32P4_SELECTS_REV_LESS_V3=|CONFIG_ESP32P4_REV_MIN_100=|CONFIG_SPIRAM_SPEED_200M=|CONFIG_BROOKESIA_HAL_ADAPTOR_AUDIO_ENABLE_PROCESSOR_IMPL=|CONFIG_LV_CONF_MINIMAL' sdkconfig
           echo "===== RESOLVED AUDIO DEPENDENCIES ====="
           grep -A4 -B2 -E 'espressif/esp-sr|jason-mao/av_processor|espressif/gmf_ai_audio' dependencies.lock || true
+          grep -q 'version: 2.5.3' dependencies.lock
 
       - name: Print build diagnostics
         if: failure()
