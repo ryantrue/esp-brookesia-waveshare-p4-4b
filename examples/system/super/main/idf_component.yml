@@ -73,3 +73,15 @@ dependencies:
     version: "0.8.*"
     override_path: ../../../../app/brookesia_app_files
     require: public
+
+# Waveshare ESP32-P4 rev1.x compatibility for ESP-IDF 6.1.
+# Brookesia 0.8 -> av_processor 0.6.x -> gmf_ai_audio 0.8.x pins esp-sr 2.4.4,
+# which rejects pre-v3 ESP32-P4 on IDF 6.1. Component Manager overrides are
+# resolved before transitive version constraints, so we can keep the full
+# Brookesia audio processor/AFE enabled without patching upstream components.
+overrides:
+  - espressif/esp-sr:
+      with:
+        espressif/esp-sr:
+          version: "2.5.3"
+      reason: "ESP32-P4 rev1.x + ESP-IDF 6.1 requires ESP-SR 2.5.x"
