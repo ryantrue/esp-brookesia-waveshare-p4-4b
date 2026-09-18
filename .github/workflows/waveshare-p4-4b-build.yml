@@ -102,15 +102,37 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          source "$IDF_PATH/export.sh"
           cd examples/system/super
-          mkdir -p build/firmware-package
-          cp build/*.bin build/firmware-package/ 2>/dev/null || true
-          cp build/bootloader/bootloader.bin build/firmware-package/ 2>/dev/null || true
-          cp build/partition_table/partition-table.bin build/firmware-package/ 2>/dev/null || true
-          cp build/flash_args build/firmware-package/ 2>/dev/null || true
-          cp build/flasher_args.json build/firmware-package/ 2>/dev/null || true
-          cp build/project_description.json build/firmware-package/ 2>/dev/null || true
-          ls -lh build/firmware-package
+
+          PACKAGE_DIR="$PWD/build/firmware-package"
+          rm -rf "$PACKAGE_DIR"
+          mkdir -p "$PACKAGE_DIR/bootloader" "$PACKAGE_DIR/partition_table" "$PACKAGE_DIR/srmodels"
+
+          cp build/example_system_super.bin "$PACKAGE_DIR/"
+          cp build/ota_data_initial.bin "$PACKAGE_DIR/"
+          cp build/littlefs_data.bin "$PACKAGE_DIR/"
+          cp build/bootloader/bootloader.bin "$PACKAGE_DIR/bootloader/"
+          cp build/partition_table/partition-table.bin "$PACKAGE_DIR/partition_table/"
+          cp build/srmodels/srmodels.bin "$PACKAGE_DIR/srmodels/"
+          cp build/flash_args "$PACKAGE_DIR/"
+          cp build/flasher_args.json "$PACKAGE_DIR/"
+          cp build/project_description.json "$PACKAGE_DIR/"
+
+          python -m esptool --chip esp32p4 merge-bin \
+            -o "$PACKAGE_DIR/waveshare-p4-4b-full-flash.bin" \
+            --flash-mode dio \
+            --flash-freq 80m \
+            --flash-size 32MB \
+            0x2000 build/bootloader/bootloader.bin \
+            0x10000 build/partition_table/partition-table.bin \
+            0x17000 build/ota_data_initial.bin \
+            0x1a000 build/srmodels/srmodels.bin \
+            0x70000 build/example_system_super.bin \
+            0x19f0000 build/littlefs_data.bin
+
+          echo "===== FLASH PACKAGE ====="
+          find "$PACKAGE_DIR" -maxdepth 2 -type f -print -exec ls -lh {} \;
 
       - name: Upload firmware artifacts
         if: success()
