@@ -1,0 +1,4 @@
+# Required for top-level dependency overrides used by the Waveshare P4-4B profile.
+# Use this file for both local builds and CI so dependency resolution is identical.
+# v3.1.x supports ESP-IDF >= 6.0 and includes transitive dependency overrides.
+idf-component-manager==3.1.2

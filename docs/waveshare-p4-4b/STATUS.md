@@ -30,20 +30,26 @@ This document tracks the public development status of the Waveshare ESP32-P4-WIF
 - [x] Upstream synchronization workflow added.
 - [x] Command-bot workflow scaffold added.
 - [x] ESP-IDF 6.1 validated locally against the previous Waveshare Brookesia firmware.
-- [ ] Add Brookesia HAL board profile for Waveshare P4-4B.
-- [ ] Integrate the published `waveshare/esp32_p4_wifi6_touch_lcd_4b` BSP where appropriate.
-- [ ] Bring up 720x720 display and GT911 touch in System Super.
-- [ ] Bring up ESP32-C6 Wi-Fi / ESP-Hosted.
-- [ ] Expose microSD as external storage for Files and App Store.
-- [ ] Validate audio playback and microphone capture.
-- [ ] Enable official Brookesia App Store and local `.bpk` installation.
-- [ ] Add ESP-IDF 6.1 CI build for this board.
-- [ ] Produce downloadable firmware artifacts.
-- [ ] Add OTA update path after the base system is stable.
+- [x] Initial Brookesia Board Manager profile added for Waveshare P4-4B.
+- [x] Board profile uses the maintained Waveshare ST7703 driver and the published BSP pin/timing contract.
+- [x] 32 MB OTA-ready partition layout added with dual 10.5 MB application slots.
+- [x] Dedicated ESP-IDF 6.1 System Super CI workflow added.
+- [ ] CI-validate the new board profile and resolve schema/build compatibility issues.
+- [ ] Hardware-validate 720x720 display and GT911 touch in System Super.
+- [ ] Hardware-validate ESP32-C6 Wi-Fi / ESP-Hosted.
+- [ ] Hardware-validate microSD as external storage for Files and App Store.
+- [ ] Hardware-validate ES8311 playback and ES7210 microphone capture.
+- [ ] Validate official Brookesia App Store and local `.bpk` installation.
+- [ ] Produce downloadable release firmware artifacts.
+- [ ] Enable and validate the OTA updater after the base system is stable.
+
+## Current feature work
+
+`feature/waveshare-p4-4b-hal` introduces the first complete board description for the new ESP-Brookesia System Super stack. The profile targets ESP32-P4 rev1.x silicon, 32 MB flash/PSRAM, ST7703/GT911, microSD, audio and ESP32-C6 hosted Wi-Fi. CI is the first gate; hardware flashing happens only after the configuration builds cleanly on ESP-IDF 6.1.
 
 ## Upstream hardware source
 
-The board integration should prefer the published Waveshare BSP from the Espressif Component Registry instead of copying low-level board code into this fork. Board-specific Brookesia HAL glue remains in this repository.
+The board integration follows the maintained Waveshare BSP from the Espressif Component Registry instead of copying its low-level implementation into this fork. Board-specific Brookesia Board Manager metadata and minimal device-factory glue remain in this repository.
 
 ## Development policy
 

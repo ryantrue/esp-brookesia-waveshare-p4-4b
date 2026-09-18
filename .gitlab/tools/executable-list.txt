@@ -12,3 +12,5 @@
 .gitlab/tools/run_test_apps.py
 
 hal/brookesia_hal_linux/scripts/install_linux_deps.sh
+
+examples/system/super/build-waveshare-p4-4b.sh

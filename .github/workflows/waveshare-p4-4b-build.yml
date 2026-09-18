@@ -1,0 +1,144 @@
+name: Waveshare P4-4B Build
+
+on:
+  pull_request:
+    branches:
+      - waveshare-p4-4b
+    paths:
+      - "hal/brookesia_hal_boards/**"
+      - "hal/brookesia_hal_adaptor/**"
+      - "examples/system/super/**"
+      - ".github/workflows/waveshare-p4-4b-build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-system-super:
+    name: ESP-IDF 6.1 / System Super / rev1.x
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v6.1
+      options: --user root
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Waveshare board
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$IDF_PATH/export.sh"
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          idf.py --version
+          cd examples/system/super
+          python -m pip install --disable-pip-version-check --upgrade -r requirements.waveshare-p4-4b.txt
+          python -c 'from importlib.metadata import version; print("idf-component-manager", version("idf-component-manager"))'
+          rm -rf build sdkconfig managed_components dependencies.lock components/gen_bmgr_codes build.log
+          idf.py gen-bmgr-config -b esp32_p4_wifi6_touch_lcd_4b
+
+          echo "===== GENERATED BOARD DEFAULTS ====="
+          grep -E 'CONFIG_ESPTOOLPY_FLASHSIZE_32MB=|CONFIG_ESP32P4_SELECTS_REV_LESS_V3=|CONFIG_ESP32P4_REV_MIN_100=|CONFIG_SPIRAM_SPEED_200M=|CONFIG_BROOKESIA_HAL_ADAPTOR_AUDIO_ENABLE_PROCESSOR_IMPL=|CONFIG_LV_CONF_MINIMAL' components/gen_bmgr_codes/board_manager.defaults
+
+      - name: Build System Super
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$IDF_PATH/export.sh"
+          cd examples/system/super
+          BOARD_DEFAULTS="$GITHUB_WORKSPACE/hal/brookesia_hal_boards/boards/waveshare/esp32_p4_wifi6_touch_lcd_4b/sdkconfig.defaults.board"
+          SDKCONFIG_DEFAULTS="$BOARD_DEFAULTS" idf.py -B build \
+            -D BROOKESIA_CXX_JOBS=3 \
+            build 2>&1 | tee build.log
+
+      - name: Verify Waveshare configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd examples/system/super
+
+          # Guard against upstream changes silently dropping board capabilities.
+          grep -q '^CONFIG_IDF_TARGET="esp32p4"$' sdkconfig
+          grep -q '^CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y$' sdkconfig
+          grep -q '^CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y$' sdkconfig
+          grep -q '^CONFIG_ESP32P4_REV_MIN_100=y$' sdkconfig
+          grep -q '^CONFIG_SPIRAM_SPEED_200M=y$' sdkconfig
+          grep -q '^CONFIG_BROOKESIA_HAL_ADAPTOR_AUDIO_ENABLE_PROCESSOR_IMPL=y$' sdkconfig
+          grep -Eq '^(CONFIG_LV_CONF_MINIMAL=n|# CONFIG_LV_CONF_MINIMAL is not set)$' sdkconfig
+
+          echo "===== RESOLVED WAVESHARE BOARD CONFIG ====="
+          grep -E 'CONFIG_IDF_TARGET=|CONFIG_ESPTOOLPY_FLASHSIZE_32MB=|CONFIG_ESP32P4_SELECTS_REV_LESS_V3=|CONFIG_ESP32P4_REV_MIN_100=|CONFIG_SPIRAM_SPEED_200M=|CONFIG_BROOKESIA_HAL_ADAPTOR_AUDIO_ENABLE_PROCESSOR_IMPL=|CONFIG_LV_CONF_MINIMAL' sdkconfig
+          echo "===== RESOLVED AUDIO DEPENDENCIES ====="
+          grep -A4 -B2 -E 'espressif/esp-sr|jason-mao/av_processor|espressif/gmf_ai_audio' dependencies.lock || true
+          grep -Eq 'version:[[:space:]]*"?2\.5\.3"?' dependencies.lock
+
+      - name: Print build diagnostics
+        if: failure()
+        shell: bash
+        run: |
+          cd examples/system/super
+          echo "===== FIRST ACTIONABLE BUILD ERRORS ====="
+          grep -nEi 'error:|fatal error:|FAILED:|CMake Error|undefined reference|No such file|not found|version solving failed|requirements are unsatisfiable' build.log | tail -160 || true
+          echo "===== END OF BUILD LOG ====="
+          tail -160 build.log || true
+
+      - name: Upload build diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-build-diagnostics
+          path: |
+            examples/system/super/build.log
+            examples/system/super/sdkconfig
+            examples/system/super/dependencies.lock
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Collect flash package
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          source "$IDF_PATH/export.sh"
+          cd examples/system/super
+
+          PACKAGE_DIR="$PWD/build/firmware-package"
+          rm -rf "$PACKAGE_DIR"
+          mkdir -p "$PACKAGE_DIR/bootloader" "$PACKAGE_DIR/partition_table" "$PACKAGE_DIR/srmodels"
+
+          cp build/example_system_super.bin "$PACKAGE_DIR/"
+          cp build/ota_data_initial.bin "$PACKAGE_DIR/"
+          cp build/littlefs_data.bin "$PACKAGE_DIR/"
+          cp build/bootloader/bootloader.bin "$PACKAGE_DIR/bootloader/"
+          cp build/partition_table/partition-table.bin "$PACKAGE_DIR/partition_table/"
+          cp build/srmodels/srmodels.bin "$PACKAGE_DIR/srmodels/"
+          cp build/flash_args "$PACKAGE_DIR/"
+          cp build/flasher_args.json "$PACKAGE_DIR/"
+          cp build/project_description.json "$PACKAGE_DIR/"
+
+          python -m esptool --chip esp32p4 merge-bin \
+            -o "$PACKAGE_DIR/waveshare-p4-4b-full-flash.bin" \
+            --flash-mode dio \
+            --flash-freq 80m \
+            --flash-size 32MB \
+            0x2000 build/bootloader/bootloader.bin \
+            0x10000 build/partition_table/partition-table.bin \
+            0x17000 build/ota_data_initial.bin \
+            0x1a000 build/srmodels/srmodels.bin \
+            0x70000 build/example_system_super.bin \
+            0x19f0000 build/littlefs_data.bin
+
+          echo "===== FLASH PACKAGE ====="
+          find "$PACKAGE_DIR" -maxdepth 2 -type f -print -exec ls -lh {} \;
+
+      - name: Upload firmware artifacts
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: waveshare-p4-4b-system-super-idf61
+          path: examples/system/super/build/firmware-package/
+          if-no-files-found: error
+          retention-days: 14

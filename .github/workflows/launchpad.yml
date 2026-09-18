@@ -23,6 +23,8 @@ on:
     branches:
       - master
   pull_request:
+    branches-ignore:
+      - waveshare-p4-4b
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
