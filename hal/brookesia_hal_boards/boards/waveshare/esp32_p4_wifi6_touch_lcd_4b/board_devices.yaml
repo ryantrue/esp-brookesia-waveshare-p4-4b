@@ -66,6 +66,10 @@ devices:
     version: default
     dependencies:
       waveshare/esp_lcd_st7703: "^2.0.0"
+      # Board-local compatibility constraint: LVGL 9.6.0 currently fails to
+      # compile its FreeType bridge against ESP-IDF 6.1. Keep this out of the
+      # shared System Super manifest so upstream merges remain conflict-free.
+      lvgl/lvgl: "==9.5.0"
     config:
       reset_gpio_num: 27
       rgb_ele_order: LCD_RGB_ELEMENT_ORDER_RGB
