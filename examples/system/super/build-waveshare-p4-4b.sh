@@ -11,12 +11,12 @@ python -m pip install --disable-pip-version-check --upgrade -r requirements.wave
 rm -rf build sdkconfig managed_components dependencies.lock components/gen_bmgr_codes build.log
 idf.py gen-bmgr-config -b esp32_p4_wifi6_touch_lcd_4b
 
-# esp_board_manager 0.5.15 has project/board defaults precedence reversed.
-# Keep upstream project defaults untouched and explicitly place the generated
-# board defaults last so Waveshare-specific values win.
-SDKCONFIG_DEFAULTS_ORDER="$PROJECT_DIR/sdkconfig.defaults;$PROJECT_DIR/components/gen_bmgr_codes/board_manager.defaults"
+# esp_board_manager 0.5.15 intentionally loads generated board defaults
+# before project sdkconfig.defaults. Environment SDKCONFIG_DEFAULTS entries are
+# appended afterwards, so re-apply this board's own defaults as the final
+# board-local overlay without modifying upstream System Super defaults.
+BOARD_DEFAULTS="$PROJECT_DIR/../../../hal/brookesia_hal_boards/boards/waveshare/esp32_p4_wifi6_touch_lcd_4b/sdkconfig.defaults.board"
 
-idf.py -B build \
+SDKCONFIG_DEFAULTS="$BOARD_DEFAULTS" idf.py -B build \
   -D BROOKESIA_CXX_JOBS="${BROOKESIA_CXX_JOBS:-3}" \
-  -D "SDKCONFIG_DEFAULTS=$SDKCONFIG_DEFAULTS_ORDER" \
   build
