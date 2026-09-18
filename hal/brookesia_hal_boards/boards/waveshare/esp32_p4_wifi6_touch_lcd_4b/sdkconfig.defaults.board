@@ -1,4 +1,6 @@
 # Waveshare ESP32-P4-WIFI6-Touch-LCD-4B, ESP32-P4 rev1.x
+# Keep hardware/compatibility overrides board-local so upstream System Super
+# files can be synchronized without carrying a permanent downstream patch.
 CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
 CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
 CONFIG_PARTITION_TABLE_CUSTOM=y
