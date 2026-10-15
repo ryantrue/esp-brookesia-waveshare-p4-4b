@@ -1,5 +1,18 @@
 # ChangeLog
 
+## Unreleased
+
+### Enhancements:
+
+- feat(storage): add `StorageHelper::fs_read_text_many` for batched `FSReadText` with cumulative default timeout.
+- feat(storage): move batch-read text results into the caller vector to avoid extra string copies.
+
+## v0.8.5 - 2026-09-10
+
+### Enhancements:
+
+- feat(usb): report the active transport in `Usb::Status`.
+
 ## v0.8.4 - 2026-08-04
 
 ### Enhancements:

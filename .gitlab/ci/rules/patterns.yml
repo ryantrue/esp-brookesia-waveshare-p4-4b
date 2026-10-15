@@ -215,6 +215,7 @@
 # brookesia_hal_boards
 .patterns-component_brookesia_hal_boards:
   - "hal/brookesia_hal_boards/boards/**/*"
+  - "hal/brookesia_hal_boards/components/**/*"
   - "hal/brookesia_hal_boards/CMakeLists.txt"
   - "hal/brookesia_hal_boards/idf_component.yml"
   - "hal/brookesia_hal_boards/README*.md"
@@ -453,6 +454,16 @@
   - "service/network/brookesia_service_sntp/README*.md"
   - "service/network/brookesia_service_sntp/CHANGELOG.md"
   - "service/network/brookesia_service_sntp/docs/**/*"
+# brookesia_service_usb
+.patterns-component_brookesia_service_usb:
+  - "service/system/brookesia_service_usb/include/**/*"
+  - "service/system/brookesia_service_usb/src/**/*"
+  - "service/system/brookesia_service_usb/CMakeLists.txt"
+  - "service/system/brookesia_service_usb/idf_component.yml"
+  - "service/system/brookesia_service_usb/Kconfig"
+  - "service/system/brookesia_service_usb/README*.md"
+  - "service/system/brookesia_service_usb/CHANGELOG.md"
+  - "service/system/brookesia_service_usb/docs/**/*"
 # brookesia_service_wifi
 .patterns-component_brookesia_service_wifi:
   - "service/network/brookesia_service_wifi/include/**/*"
